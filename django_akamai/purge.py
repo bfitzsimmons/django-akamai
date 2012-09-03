@@ -45,6 +45,7 @@ from __future__ import absolute_import
 import os.path
 
 from django.conf import settings
+from django.contrib.sites.models import Site
 from django.db.models.query import QuerySet
 
 from suds.client import Client
@@ -91,6 +92,8 @@ class PurgeRequest(object):
             if not self.password:
                 raise NoAkamaiPasswordProvidedException
 
+        self.domain = Site.objects.get_current()
+
         """
         Get default options, then update with any user-provided options
         """
@@ -128,9 +131,11 @@ class PurgeRequest(object):
             self.urls.append(urls)
         elif isinstance(urls, QuerySet):
             for obj in urls:
-                self.urls.append(obj.get_absolute_url())
+                url = 'http://{0}{1}'.format(self.domain, obj.get_absolute_url())
+                self.urls.append(url)
         elif hasattr(urls, 'get_absolute_url'):
-            self.urls.append(urls.get_absolute_url())
+            url = 'http://{0}{1}'.format(self.domain, urls.get_absolute_url())
+            self.urls.append(url)
         else:
             raise TypeError("Don't know how to handle %r" % urls)
 

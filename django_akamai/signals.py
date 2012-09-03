@@ -13,11 +13,12 @@ object or QuerySet, then get_absolute_url() must be defined on every object.
 Example:
 >>> obj = MyObject.objects.get(pk=3)
 >>> obj.get_absolute_url()
-u'http://www.example.com/blahblah.html'
+u'/blahblah.html'
 >>> purge_request.send(obj)
 
 Or:
 >>> queue_purge_request.send(obj)
+
 """
 from __future__ import absolute_import
 
@@ -35,9 +36,10 @@ else:
 
 purge_request = Signal()
 
+
 def purge_request_handler(sender, **kwargs):
     pr = PurgeRequest()
-    pr.add(sender.get_absolute_url())
+    pr.add(sender)
     result = pr.purge()
     return result
 
@@ -48,6 +50,6 @@ if tasks_available:
     queue_purge_request = Signal()
 
     def queue_purge_request_handler(sender, **kwargs):
-        result = PurgeRequestTask.delay(sender)
+        PurgeRequestTask.delay(sender)
 
     queue_purge_request.connect(queue_purge_request_handler)
